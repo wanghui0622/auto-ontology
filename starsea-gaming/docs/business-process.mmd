@@ -1,0 +1,50 @@
+%% Stage 1 业务流程示意（充值 / 商城 / 客服 / 推广）
+%% 细节状态机在 Stage 2/3 与数据生成中落地
+
+flowchart TB
+  subgraph ACQ["推广获客"]
+    AD[广告曝光/点击] --> REG[玩家注册 identity.players]
+    REG --> FT[写入 first_touch 归因]
+    REG --> ACC[创建 player_accounts]
+  end
+
+  subgraph PLAY["游戏运营"]
+    ACC --> CHAR[创建 characters]
+    CHAR --> SESS[player_sessions]
+    CHAR --> EVT[game_events / missions / battles]
+  end
+
+  subgraph PAY["充值支付"]
+    CHAR --> RO[创建 recharge_orders]
+    RO --> TX[payment_transactions]
+    TX -->|success| WL_IN[wallet_ledgers recharge_credit]
+    WL_IN --> WAL[wallets.balance 增加]
+    TX -->|fail| RO_FAIL[订单 failed]
+    RO -->|refund| PR[payment_refunds + ledger debit]
+  end
+
+  subgraph MALL["商城消费"]
+    WAL --> MO[mall_orders]
+    MO --> MOI[mall_order_items]
+    MO -->|wallet| WL_OUT[wallet_ledgers mall_debit]
+    MO -->|success| DEL[item_delivery_records]
+    MO -->|refund| MR[mall_refunds + ledger credit]
+  end
+
+  subgraph MKT["活动运营"]
+    REG --> PART[campaign_participations]
+    PART --> REW[campaign_rewards]
+    REW -->|currency| WL_RW[wallet_ledgers campaign_reward_credit]
+    PART -->|转化| RO2[关联 converted_recharge_order_id]
+  end
+
+  subgraph CS["客服"]
+    RO_FAIL --> TK[tickets]
+    MR --> TK
+    DEL --> TK
+    REW --> TK
+    TK --> MSG[ticket_messages]
+    TK --> ASG[ticket_assignments]
+    ASG --> RES[ticket_resolution_records]
+    RES --> CSAT[customer_satisfaction]
+  end

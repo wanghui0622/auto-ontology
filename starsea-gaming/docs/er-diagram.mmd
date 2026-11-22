@@ -1,0 +1,627 @@
+%% StarSea Gaming — Stage 1 Logical ER Diagram
+%% Render with Mermaid. Cross-schema FKs use entity names prefixed by domain.
+
+erDiagram
+  %% ========== identity ==========
+  IDENTITY_REGISTRATION_SOURCES {
+    uuid registration_source_id PK
+    string source_code UK
+    string source_name
+    string source_type
+    timestamptz created_at
+    timestamptz updated_at
+  }
+
+  IDENTITY_PLAYERS {
+    uuid player_id PK
+    string nickname
+    timestamptz register_time
+    string register_channel
+    uuid registration_source_id FK
+    string country
+    string status
+    string player_type
+    int vip_level
+    timestamptz created_at
+    timestamptz updated_at
+  }
+
+  IDENTITY_PLAYER_ACCOUNTS {
+    uuid account_id PK
+    uuid player_id FK
+    uuid game_id FK
+    string account_name UK
+    string account_status
+    timestamptz created_at
+    timestamptz updated_at
+  }
+
+  IDENTITY_PLAYER_DEVICES {
+    uuid device_record_id PK
+    uuid player_id FK
+    string device_id
+    string device_os
+    string device_model
+    timestamptz first_seen_at
+    timestamptz last_seen_at
+    timestamptz created_at
+    timestamptz updated_at
+  }
+
+  IDENTITY_PLAYER_TAGS {
+    uuid tag_id PK
+    string tag_code UK
+    string tag_name
+    string tag_category
+    timestamptz created_at
+    timestamptz updated_at
+  }
+
+  IDENTITY_PLAYER_TAG_RELATIONS {
+    uuid player_id PK_FK
+    uuid tag_id PK_FK
+    timestamptz tagged_at
+    string tagged_by
+    timestamptz created_at
+    timestamptz updated_at
+  }
+
+  IDENTITY_REGISTRATION_SOURCES ||--o{ IDENTITY_PLAYERS : "registers_via"
+  IDENTITY_PLAYERS ||--o{ IDENTITY_PLAYER_ACCOUNTS : "owns"
+  IDENTITY_PLAYERS ||--o{ IDENTITY_PLAYER_DEVICES : "uses"
+  IDENTITY_PLAYERS ||--o{ IDENTITY_PLAYER_TAG_RELATIONS : "tagged"
+  IDENTITY_PLAYER_TAGS ||--o{ IDENTITY_PLAYER_TAG_RELATIONS : "applies"
+
+  %% ========== game ==========
+  GAME_GAMES {
+    uuid game_id PK
+    string game_code UK
+    string game_name
+    string genre
+    string status
+    timestamptz launched_at
+    timestamptz created_at
+    timestamptz updated_at
+  }
+
+  GAME_GAME_SERVERS {
+    uuid server_id PK
+    uuid game_id FK
+    string server_code
+    string server_name
+    string region
+    string status
+    timestamptz opened_at
+    timestamptz created_at
+    timestamptz updated_at
+  }
+
+  GAME_CHARACTERS {
+    uuid character_id PK
+    uuid player_id FK
+    uuid game_id FK
+    uuid server_id FK
+    string character_name
+    int level
+    numeric combat_power
+    int total_play_minutes
+    timestamptz last_login_at
+    string status
+    timestamptz created_at
+    timestamptz updated_at
+  }
+
+  GAME_CHARACTER_ATTRIBUTES {
+    uuid attribute_id PK
+    uuid character_id FK
+    string attribute_key
+    string attribute_value
+    timestamptz effective_at
+    timestamptz created_at
+    timestamptz updated_at
+  }
+
+  GAME_PLAYER_SESSIONS {
+    uuid session_id PK
+    uuid player_id FK
+    uuid game_id FK
+    uuid character_id FK
+    timestamptz login_at
+    timestamptz logout_at
+    int duration_seconds
+    string client_version
+    timestamptz created_at
+    timestamptz updated_at
+  }
+
+  GAME_GAME_EVENTS {
+    uuid event_id PK
+    uuid player_id FK
+    uuid character_id FK
+    uuid game_id FK
+    string event_type
+    string event_name
+    jsonb event_payload
+    timestamptz event_time
+    timestamptz created_at
+    timestamptz updated_at
+  }
+
+  GAME_MISSIONS {
+    uuid mission_id PK
+    uuid game_id FK
+    string mission_code UK
+    string mission_name
+    string mission_type
+    int min_level
+    timestamptz created_at
+    timestamptz updated_at
+  }
+
+  GAME_MISSION_RECORDS {
+    uuid mission_record_id PK
+    uuid mission_id FK
+    uuid character_id FK
+    string status
+    timestamptz started_at
+    timestamptz completed_at
+    timestamptz created_at
+    timestamptz updated_at
+  }
+
+  GAME_BATTLES {
+    uuid battle_id PK
+    uuid game_id FK
+    uuid server_id FK
+    string battle_type
+    string result_summary
+    timestamptz started_at
+    timestamptz ended_at
+    timestamptz created_at
+    timestamptz updated_at
+  }
+
+  GAME_BATTLE_PARTICIPANTS {
+    uuid battle_id PK_FK
+    uuid character_id PK_FK
+    string side
+    string result
+    numeric damage_dealt
+    timestamptz created_at
+    timestamptz updated_at
+  }
+
+  GAME_GAME_ITEMS {
+    uuid game_item_id PK
+    uuid game_id FK
+    string item_code UK
+    string item_name
+    string item_type
+    string rarity
+    timestamptz created_at
+    timestamptz updated_at
+  }
+
+  GAME_GAMES ||--o{ GAME_GAME_SERVERS : "has"
+  GAME_GAMES ||--o{ GAME_CHARACTERS : "hosts"
+  GAME_GAME_SERVERS ||--o{ GAME_CHARACTERS : "hosts"
+  IDENTITY_PLAYERS ||--o{ GAME_CHARACTERS : "creates"
+  GAME_CHARACTERS ||--o{ GAME_CHARACTER_ATTRIBUTES : "has"
+  IDENTITY_PLAYERS ||--o{ GAME_PLAYER_SESSIONS : "logs_in"
+  GAME_CHARACTERS ||--o{ GAME_PLAYER_SESSIONS : "plays_as"
+  GAME_GAMES ||--o{ GAME_PLAYER_SESSIONS : "session_of"
+  IDENTITY_PLAYERS ||--o{ GAME_GAME_EVENTS : "triggers"
+  GAME_CHARACTERS ||--o{ GAME_GAME_EVENTS : "acts_as"
+  GAME_GAMES ||--o{ GAME_MISSIONS : "defines"
+  GAME_MISSIONS ||--o{ GAME_MISSION_RECORDS : "recorded_in"
+  GAME_CHARACTERS ||--o{ GAME_MISSION_RECORDS : "completes"
+  GAME_GAMES ||--o{ GAME_BATTLES : "contains"
+  GAME_GAME_SERVERS ||--o{ GAME_BATTLES : "hosts"
+  GAME_BATTLES ||--o{ GAME_BATTLE_PARTICIPANTS : "includes"
+  GAME_CHARACTERS ||--o{ GAME_BATTLE_PARTICIPANTS : "joins"
+  GAME_GAMES ||--o{ GAME_GAME_ITEMS : "defines"
+  GAME_GAMES ||--o{ IDENTITY_PLAYER_ACCOUNTS : "account_for"
+
+  %% ========== mall ==========
+  MALL_PRODUCT_CATEGORIES {
+    uuid category_id PK
+    string category_code UK
+    string category_name
+    uuid parent_category_id FK
+    timestamptz created_at
+    timestamptz updated_at
+  }
+
+  MALL_PRODUCTS {
+    uuid product_id PK
+    uuid category_id FK
+    uuid game_id FK
+    string product_code UK
+    string product_name
+    string price_currency
+    numeric list_price
+    string status
+    timestamptz created_at
+    timestamptz updated_at
+  }
+
+  MALL_PRODUCT_ITEMS {
+    uuid product_item_id PK
+    uuid product_id FK
+    uuid game_item_id FK
+    int quantity
+    timestamptz created_at
+    timestamptz updated_at
+  }
+
+  MALL_MALL_ORDERS {
+    uuid mall_order_id PK
+    string order_no UK
+    uuid player_id FK
+    uuid character_id FK
+    uuid game_id FK
+    string price_currency
+    numeric payable_amount
+    numeric paid_amount
+    string payment_method
+    string status
+    timestamptz ordered_at
+    timestamptz paid_at
+    timestamptz created_at
+    timestamptz updated_at
+  }
+
+  MALL_MALL_ORDER_ITEMS {
+    uuid mall_order_item_id PK
+    uuid mall_order_id FK
+    uuid product_id FK
+    int quantity
+    numeric unit_price
+    numeric line_amount
+    timestamptz created_at
+    timestamptz updated_at
+  }
+
+  MALL_MALL_REFUNDS {
+    uuid mall_refund_id PK
+    uuid mall_order_id FK
+    numeric refund_amount
+    string refund_currency
+    string status
+    string reason_code
+    timestamptz refunded_at
+    timestamptz created_at
+    timestamptz updated_at
+  }
+
+  MALL_ITEM_DELIVERY_RECORDS {
+    uuid delivery_id PK
+    uuid mall_order_id FK
+    uuid mall_order_item_id FK
+    uuid player_id FK
+    uuid character_id FK
+    uuid game_item_id FK
+    int quantity
+    string delivery_status
+    timestamptz delivered_at
+    timestamptz created_at
+    timestamptz updated_at
+  }
+
+  MALL_PRODUCT_CATEGORIES ||--o{ MALL_PRODUCTS : "categorizes"
+  MALL_PRODUCT_CATEGORIES ||--o{ MALL_PRODUCT_CATEGORIES : "parent_of"
+  GAME_GAMES ||--o{ MALL_PRODUCTS : "sells_for"
+  MALL_PRODUCTS ||--o{ MALL_PRODUCT_ITEMS : "contains"
+  GAME_GAME_ITEMS ||--o{ MALL_PRODUCT_ITEMS : "bundled_as"
+  IDENTITY_PLAYERS ||--o{ MALL_MALL_ORDERS : "places"
+  GAME_CHARACTERS ||--o{ MALL_MALL_ORDERS : "receives_to"
+  MALL_MALL_ORDERS ||--o{ MALL_MALL_ORDER_ITEMS : "has"
+  MALL_PRODUCTS ||--o{ MALL_MALL_ORDER_ITEMS : "sold_in"
+  MALL_MALL_ORDERS ||--o{ MALL_MALL_REFUNDS : "refunded_by"
+  MALL_MALL_ORDERS ||--o{ MALL_ITEM_DELIVERY_RECORDS : "delivers"
+  MALL_MALL_ORDER_ITEMS ||--o{ MALL_ITEM_DELIVERY_RECORDS : "line_delivers"
+  GAME_GAME_ITEMS ||--o{ MALL_ITEM_DELIVERY_RECORDS : "item"
+  IDENTITY_PLAYERS ||--o{ MALL_ITEM_DELIVERY_RECORDS : "owner"
+  GAME_CHARACTERS ||--o{ MALL_ITEM_DELIVERY_RECORDS : "to_character"
+
+  %% ========== payment ==========
+  PAYMENT_PAYMENT_CHANNELS {
+    uuid payment_channel_id PK
+    string channel_code UK
+    string channel_name
+    string channel_type
+    string status
+    timestamptz created_at
+    timestamptz updated_at
+  }
+
+  PAYMENT_RECHARGE_PRODUCTS {
+    uuid recharge_product_id PK
+    uuid game_id FK
+    string product_code UK
+    string product_name
+    numeric price_amount_cny
+    string credit_currency_code
+    numeric credit_currency_amount
+    string status
+    timestamptz created_at
+    timestamptz updated_at
+  }
+
+  PAYMENT_RECHARGE_ORDERS {
+    uuid recharge_order_id PK
+    string order_no UK
+    uuid player_id FK
+    uuid game_id FK
+    uuid recharge_product_id FK
+    numeric order_amount
+    numeric credit_currency_amount
+    string credit_currency_code
+    string status
+    timestamptz ordered_at
+    timestamptz completed_at
+    timestamptz created_at
+    timestamptz updated_at
+  }
+
+  PAYMENT_PAYMENT_TRANSACTIONS {
+    uuid payment_transaction_id PK
+    uuid recharge_order_id FK
+    uuid payment_channel_id FK
+    string channel_txn_no
+    numeric paid_amount
+    string currency_code
+    string status
+    timestamptz paid_at
+    timestamptz created_at
+    timestamptz updated_at
+  }
+
+  PAYMENT_PAYMENT_REFUNDS {
+    uuid payment_refund_id PK
+    uuid recharge_order_id FK
+    uuid payment_transaction_id FK
+    numeric refund_amount
+    string status
+    string reason_code
+    timestamptz refunded_at
+    timestamptz created_at
+    timestamptz updated_at
+  }
+
+  PAYMENT_WALLETS {
+    uuid wallet_id PK
+    uuid player_id FK
+    string currency_code
+    numeric balance
+    string status
+    timestamptz created_at
+    timestamptz updated_at
+  }
+
+  PAYMENT_WALLET_LEDGERS {
+    uuid ledger_id PK
+    uuid wallet_id FK
+    string entry_type
+    numeric change_amount
+    numeric balance_after
+    uuid recharge_order_id FK
+    uuid mall_order_id FK
+    uuid campaign_reward_id FK
+    string remark
+    timestamptz occurred_at
+    timestamptz created_at
+    timestamptz updated_at
+  }
+
+  IDENTITY_PLAYERS ||--o{ PAYMENT_RECHARGE_ORDERS : "recharges"
+  GAME_GAMES ||--o{ PAYMENT_RECHARGE_PRODUCTS : "offers"
+  GAME_GAMES ||--o{ PAYMENT_RECHARGE_ORDERS : "for_game"
+  PAYMENT_RECHARGE_PRODUCTS ||--o{ PAYMENT_RECHARGE_ORDERS : "purchased_as"
+  PAYMENT_RECHARGE_ORDERS ||--o{ PAYMENT_PAYMENT_TRANSACTIONS : "paid_via"
+  PAYMENT_PAYMENT_CHANNELS ||--o{ PAYMENT_PAYMENT_TRANSACTIONS : "processes"
+  PAYMENT_RECHARGE_ORDERS ||--o{ PAYMENT_PAYMENT_REFUNDS : "refunds"
+  PAYMENT_PAYMENT_TRANSACTIONS ||--o{ PAYMENT_PAYMENT_REFUNDS : "refunds_txn"
+  IDENTITY_PLAYERS ||--o{ PAYMENT_WALLETS : "holds"
+  PAYMENT_WALLETS ||--o{ PAYMENT_WALLET_LEDGERS : "posts"
+  PAYMENT_RECHARGE_ORDERS ||--o{ PAYMENT_WALLET_LEDGERS : "credits"
+  MALL_MALL_ORDERS ||--o{ PAYMENT_WALLET_LEDGERS : "debits_or_credits"
+
+  %% ========== support ==========
+  SUPPORT_AGENTS {
+    uuid agent_id PK
+    string agent_code UK
+    string agent_name
+    string team_name
+    string status
+    timestamptz created_at
+    timestamptz updated_at
+  }
+
+  SUPPORT_TICKET_CATEGORIES {
+    uuid category_id PK
+    string category_code UK
+    string category_name
+    string description
+    timestamptz created_at
+    timestamptz updated_at
+  }
+
+  SUPPORT_TICKETS {
+    uuid ticket_id PK
+    string ticket_no UK
+    uuid player_id FK
+    uuid category_id FK
+    uuid character_id FK
+    uuid recharge_order_id FK
+    uuid mall_order_id FK
+    uuid campaign_id FK
+    string subject
+    string priority
+    string status
+    timestamptz opened_at
+    timestamptz closed_at
+    timestamptz created_at
+    timestamptz updated_at
+  }
+
+  SUPPORT_TICKET_MESSAGES {
+    uuid message_id PK
+    uuid ticket_id FK
+    string sender_type
+    uuid sender_player_id FK
+    uuid sender_agent_id FK
+    text message_body
+    timestamptz sent_at
+    timestamptz created_at
+    timestamptz updated_at
+  }
+
+  SUPPORT_TICKET_ASSIGNMENTS {
+    uuid assignment_id PK
+    uuid ticket_id FK
+    uuid agent_id FK
+    string assignment_reason
+    timestamptz assigned_at
+    timestamptz unassigned_at
+    timestamptz created_at
+    timestamptz updated_at
+  }
+
+  SUPPORT_TICKET_RESOLUTION_RECORDS {
+    uuid resolution_id PK
+    uuid ticket_id FK
+    uuid resolved_by_agent_id FK
+    string resolution_code
+    text resolution_summary
+    timestamptz resolved_at
+    timestamptz created_at
+    timestamptz updated_at
+  }
+
+  SUPPORT_CUSTOMER_SATISFACTION {
+    uuid csat_id PK
+    uuid ticket_id FK
+    uuid player_id FK
+    int score
+    string comment_text
+    timestamptz rated_at
+    timestamptz created_at
+    timestamptz updated_at
+  }
+
+  SUPPORT_TICKET_CATEGORIES ||--o{ SUPPORT_TICKETS : "classifies"
+  IDENTITY_PLAYERS ||--o{ SUPPORT_TICKETS : "opens"
+  GAME_CHARACTERS ||--o{ SUPPORT_TICKETS : "about_character"
+  PAYMENT_RECHARGE_ORDERS ||--o{ SUPPORT_TICKETS : "about_recharge"
+  MALL_MALL_ORDERS ||--o{ SUPPORT_TICKETS : "about_mall"
+  SUPPORT_TICKETS ||--o{ SUPPORT_TICKET_MESSAGES : "has"
+  SUPPORT_TICKETS ||--o{ SUPPORT_TICKET_ASSIGNMENTS : "assigned"
+  SUPPORT_AGENTS ||--o{ SUPPORT_TICKET_ASSIGNMENTS : "handles"
+  SUPPORT_TICKETS ||--o| SUPPORT_TICKET_RESOLUTION_RECORDS : "resolved_as"
+  SUPPORT_AGENTS ||--o{ SUPPORT_TICKET_RESOLUTION_RECORDS : "resolved_by"
+  SUPPORT_TICKETS ||--o| SUPPORT_CUSTOMER_SATISFACTION : "rated"
+  IDENTITY_PLAYERS ||--o{ SUPPORT_CUSTOMER_SATISFACTION : "rates"
+
+  %% ========== marketing ==========
+  MARKETING_MARKETING_CHANNELS {
+    uuid marketing_channel_id PK
+    string channel_code UK
+    string channel_name
+    string channel_family
+    string status
+    timestamptz created_at
+    timestamptz updated_at
+  }
+
+  MARKETING_CAMPAIGNS {
+    uuid campaign_id PK
+    string campaign_code UK
+    string campaign_name
+    uuid game_id FK
+    string campaign_type
+    string status
+    timestamptz start_at
+    timestamptz end_at
+    timestamptz created_at
+    timestamptz updated_at
+  }
+
+  MARKETING_CAMPAIGN_CHANNELS {
+    uuid campaign_id PK_FK
+    uuid marketing_channel_id PK_FK
+    string placement_note
+    timestamptz created_at
+    timestamptz updated_at
+  }
+
+  MARKETING_AD_COSTS {
+    uuid ad_cost_id PK
+    uuid marketing_channel_id FK
+    uuid campaign_id FK
+    date cost_date
+    numeric cost_amount
+    string currency_code
+    int impressions
+    int clicks
+    timestamptz created_at
+    timestamptz updated_at
+  }
+
+  MARKETING_PLAYER_ATTRIBUTIONS {
+    uuid attribution_id PK
+    uuid player_id FK
+    uuid marketing_channel_id FK
+    uuid campaign_id FK
+    string attribution_type
+    timestamptz attributed_at
+    string attribution_model
+    timestamptz created_at
+    timestamptz updated_at
+  }
+
+  MARKETING_CAMPAIGN_PARTICIPATIONS {
+    uuid participation_id PK
+    uuid campaign_id FK
+    uuid player_id FK
+    uuid character_id FK
+    timestamptz joined_at
+    string participation_status
+    uuid converted_recharge_order_id FK
+    timestamptz converted_at
+    timestamptz created_at
+    timestamptz updated_at
+  }
+
+  MARKETING_CAMPAIGN_REWARDS {
+    uuid campaign_reward_id PK
+    uuid participation_id FK
+    uuid player_id FK
+    string reward_type
+    string reward_currency_code
+    numeric reward_amount
+    uuid game_item_id FK
+    int item_quantity
+    string grant_status
+    timestamptz granted_at
+    timestamptz created_at
+    timestamptz updated_at
+  }
+
+  MARKETING_CAMPAIGNS ||--o{ MARKETING_CAMPAIGN_CHANNELS : "runs_on"
+  MARKETING_MARKETING_CHANNELS ||--o{ MARKETING_CAMPAIGN_CHANNELS : "carries"
+  MARKETING_MARKETING_CHANNELS ||--o{ MARKETING_AD_COSTS : "spends"
+  MARKETING_CAMPAIGNS ||--o{ MARKETING_AD_COSTS : "budgeted_by"
+  IDENTITY_PLAYERS ||--o{ MARKETING_PLAYER_ATTRIBUTIONS : "attributed"
+  MARKETING_MARKETING_CHANNELS ||--o{ MARKETING_PLAYER_ATTRIBUTIONS : "source"
+  MARKETING_CAMPAIGNS ||--o{ MARKETING_PLAYER_ATTRIBUTIONS : "optional_campaign"
+  GAME_GAMES ||--o{ MARKETING_CAMPAIGNS : "promotes"
+  MARKETING_CAMPAIGNS ||--o{ MARKETING_CAMPAIGN_PARTICIPATIONS : "includes"
+  IDENTITY_PLAYERS ||--o{ MARKETING_CAMPAIGN_PARTICIPATIONS : "joins"
+  GAME_CHARACTERS ||--o{ MARKETING_CAMPAIGN_PARTICIPATIONS : "as_character"
+  PAYMENT_RECHARGE_ORDERS ||--o{ MARKETING_CAMPAIGN_PARTICIPATIONS : "converted_from"
+  MARKETING_CAMPAIGN_PARTICIPATIONS ||--o{ MARKETING_CAMPAIGN_REWARDS : "earns"
+  IDENTITY_PLAYERS ||--o{ MARKETING_CAMPAIGN_REWARDS : "receives"
+  GAME_GAME_ITEMS ||--o{ MARKETING_CAMPAIGN_REWARDS : "item_reward"
+  PAYMENT_WALLET_LEDGERS ||--o{ MARKETING_CAMPAIGN_REWARDS : "may_post"
+  MARKETING_CAMPAIGNS ||--o{ SUPPORT_TICKETS : "about_campaign"
