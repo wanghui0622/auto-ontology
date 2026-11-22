@@ -1,0 +1,28 @@
+# Independent PostgreSQL for StarSea Gaming demo data.
+# Does not modify or depend on Auto-Ontology application services.
+
+services:
+  starsea-postgres:
+    image: postgres:17
+    container_name: starsea-gaming-postgres
+    restart: unless-stopped
+    ports:
+      - "${STARSEA_PG_PORT:-5433}:5432"
+    environment:
+      POSTGRES_DB: ${STARSEA_PG_DB:-starsea_gaming}
+      POSTGRES_USER: ${STARSEA_PG_USER:-starsea}
+      POSTGRES_PASSWORD: ${STARSEA_PG_PASSWORD:-starsea_dev_password}
+      STARSEA_READONLY_USER: ${STARSEA_READONLY_USER:-starsea_readonly}
+      STARSEA_READONLY_PASSWORD: ${STARSEA_READONLY_PASSWORD:-starsea_readonly_password}
+    volumes:
+      - starsea_pg_data:/var/lib/postgresql/data
+      - ./docker/init:/docker-entrypoint-initdb.d:ro
+      - ./sql:/sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+volumes:
+  starsea_pg_data:
