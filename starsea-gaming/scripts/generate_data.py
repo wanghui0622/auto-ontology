@@ -408,8 +408,8 @@ def build_dataset(seed: int = SEED) -> Dataset:
         camp = rng.choice(campaign_rows) if rng.random() < 0.7 else None
         impressions = rng.randint(1000, 80000)
         clicks = rng.randint(10, max(11, impressions // 20))
-        # cost roughly CAC-ish * clicks / 10
-        cost = (channel_cac[code] * D(clicks) / D(30)).quantize(Decimal("0.01"))
+        # Daily spend scaled by channel unit CAC; keep totals in a believable demo range.
+        cost = (channel_cac[code] * D(rng.uniform(8, 40))).quantize(Decimal("0.01"))
         ad_costs.append(
             (
                 uid(rng),
@@ -1280,15 +1280,39 @@ def build_dataset(seed: int = SEED) -> Dataset:
             (uid(rng), meta["wallet_id"], "adjust", amt, meta["balance"], None, None, None, "运营调增", ts + timedelta(seconds=1), ts, ts)
         )
 
-    # update wallet balances in wallet rows
-    balance_by_wallet = {m["wallet_id"]: m["balance"] for m in players_meta}
+    # Align ledger chronology with causal generation order so balance_after
+    # time series stays non-negative and matches wallet.balance.
+    ledgers_by_wallet: dict[uuid.UUID, list[list[Any]]] = {}
+    for row in wallet_ledgers:
+        ledgers_by_wallet.setdefault(row[1], []).append(list(row))
+    rebuilt_ledgers: list[tuple] = []
+    balance_by_wallet: dict[uuid.UUID, Decimal] = {}
+    for wid, rows in ledgers_by_wallet.items():
+        # preserve append/causal order (not raw random occurred_at)
+        base = min((r[9] for r in rows), default=START)
+        if not isinstance(base, datetime):
+            base = START
+        running = D(0)
+        for i, r in enumerate(rows):
+            ts = clamp_dt(base + timedelta(seconds=i))
+            r[9] = ts  # occurred_at
+            r[10] = ts  # created_at
+            r[11] = ts  # updated_at
+            running += D(r[3])
+            r[4] = running  # balance_after
+            rebuilt_ledgers.append(tuple(r))
+        balance_by_wallet[wid] = running
+    for m in players_meta:
+        balance_by_wallet.setdefault(m["wallet_id"], D(0))
+        m["balance"] = balance_by_wallet[m["wallet_id"]]
+
     wallets_updated = []
     for w in wallets:
         wallets_updated.append(
             (w[0], w[1], w[2], balance_by_wallet.get(w[0], D(0)), w[4], w[5], w[6])
         )
     ds.tables["payment.wallets"] = wallets_updated
-    ds.tables["payment.wallet_ledgers"] = wallet_ledgers
+    ds.tables["payment.wallet_ledgers"] = rebuilt_ledgers
 
     # ------------------------------------------------------------------ support tickets
     tickets = []

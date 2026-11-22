@@ -6,15 +6,17 @@
 
 ## 当前阶段
 
-**Stage 3：模拟数据已可一键灌库**
+**Stage 4：数据质量验证已通过**
 
 | 产物 | 路径 |
 |---|---|
 | Compose / DDL | `docker-compose.yml`, `sql/01`–`04` |
-| 数据生成 | `scripts/generate_data.py`（种子 `42`） |
-| 灌库 | `scripts/seed_database.py` |
-| 校验 | `scripts/validate_data.py` |
+| 数据生成 / 灌库 | `scripts/generate_data.py`, `scripts/seed_database.py` |
+| 质量校验 | `scripts/validate_data.py`（规模/FK/钱包/充值/商城/归因/指标） |
 | 质量报告 | `docs/data-quality-report.md` |
+| 指标口径 | `docs/metric-definitions.md` |
+| SQL 探针 | `sql/quality-checks.sql` |
+| 测试 | `tests/test_*.py` |
 | 接入说明 | `docs/auto-ontology-connection.md` |
 
 ## 快速启动
