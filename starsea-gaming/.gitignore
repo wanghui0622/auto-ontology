@@ -1,0 +1,8 @@
+.env
+*.pyc
+__pycache__/
+.venv/
+.pytest_cache/
+.coverage
+htmlcov/
+data_quality_report.md

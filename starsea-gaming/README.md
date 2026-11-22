@@ -6,29 +6,54 @@
 
 ## 当前阶段
 
-**Stage 1：业务建模（待确认）**
+**Stage 2：数据库设计（进行中 / 已落地 DDL）**
 
-已产出：
-
-| 文档 | 说明 |
+| 产物 | 路径 |
 |---|---|
-| [`docs/business-overview.md`](./docs/business-overview.md) | 业务背景与主流程 |
-| [`docs/domain-model.md`](./docs/domain-model.md) | 六大业务域与核心实体 |
-| [`docs/business-relationships.md`](./docs/business-relationships.md) | 跨域关系与标识约定 |
-| [`docs/er-diagram.mmd`](./docs/er-diagram.mmd) | 完整 ER 图（Mermaid） |
-| [`docs/stage1-review.md`](./docs/stage1-review.md) | Stage 1 确认清单与开放决策点 |
+| Compose | `docker-compose.yml` |
+| DDL | `sql/01_create_schemas.sql` … `03_constraints_indexes.sql` |
+| 只读授权 | `sql/04_grants_readonly.sql` + Compose 初始化脚本 |
+| 接入说明 | `docs/auto-ontology-connection.md` |
+| 数据字典 | `docs/data-dictionary.md` |
+| Stage 1 模型 | `docs/domain-model.md` 等 |
 
-确认本阶段模型后，再进入 Stage 2（DDL）与后续数据生成。
+Stage 3（模拟数据生成）尚未开始。
+
+## 快速启动
+
+```bash
+cd starsea-gaming
+cp -n .env.example .env
+docker compose up -d
+# 等待 healthy 后：
+docker compose exec starsea-postgres \
+  psql -U starsea -d starsea_gaming -c "\dn"
+```
+
+默认端口 **5433**，库名 **`starsea_gaming`**。
+
+已有空库时也可：
+
+```bash
+./scripts/init_database.sh
+./scripts/reset_database.sh   # 危险：DROP SCHEMA CASCADE 后重建
+```
 
 ## 目标数据库
 
 - 引擎：PostgreSQL 17
-- 库名：`starsea_gaming`
-- Schema：`identity` / `game` / `mall` / `payment` / `support` / `marketing`
+- Schema：`identity` / `game` / `mall` / `payment` / `support` / `marketing`（45 表）
+- 金额：`NUMERIC`；时间：UTC `TIMESTAMPTZ`
+- 主键：UUID；跨域枢纽：`identity.players.player_id`
+
+## Auto-Ontology
+
+使用只读账号连接，见 [`docs/auto-ontology-connection.md`](./docs/auto-ontology-connection.md)。
+
+**不要**在 Auto-Ontology 中手工预置 Terms / Relationships / SQL Attributes。
 
 ## 原则
 
-1. 不以手工 Terms / Relationships / SQL Attributes 预置本体。
-2. 以原生主键、外键、约束、COMMENT 与一致性数据承载语义。
-3. 金额一律 `NUMERIC`，时间一律 UTC。
-4. 与 Auto-Ontology 主项目隔离：独立 Compose、独立库、独立用户。
+1. 不以手工本体预置替代自动发现。
+2. 以原生 FK、约束、COMMENT 与后续一致性数据承载语义。
+3. 与 Auto-Ontology 主项目隔离：独立 Compose、独立库、独立用户。
