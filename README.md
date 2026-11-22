@@ -50,6 +50,8 @@ The script creates `.env` from `.env.example` when `.env` is missing, leaves
 the placeholder source database unset, and runs `docker compose up -d --build`.
 Open <http://localhost:3000> and sign in with the admin email and password in
 `.env`. Chat still needs `DEFAULT_MODELS_API_KEY` and a source connection.
+A walkthrough of this path, including the login and the empty semantic layer,
+is in [docs/使用教程.md](docs/使用教程.md).
 The steps below load the Wide World Importers sample into that same Postgres.
 
 1. Clone the repository and create `.env`:
