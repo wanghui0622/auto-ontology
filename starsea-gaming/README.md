@@ -6,16 +6,16 @@
 
 ## 当前阶段
 
-**Stage 5：Auto-Ontology 只读接入就绪**
+**Stage 6：本体自动化验证材料已就绪**
 
 | 产物 | 路径 |
 |---|---|
-| Compose / DDL / 灌数 / 质量校验 | 见 Stage 2–4 |
+| 验证总览 | `docs/auto-ontology-validation.md` |
+| 分析问题（35） | `docs/analysis-questions.md` |
+| 分析 SQL | `sql/analytics-workload.sql` |
+| 连接器探测 | `scripts/probe_ao_discovery.py` |
 | 接入说明 | `docs/auto-ontology-connection.md` |
-| 连接示例 | `config/auto-ontology-connection.example.json` |
-| CONNECTION_STRINGS 示例 | `config/connection-strings.example.env` |
-| 只读就绪检查 | `scripts/verify_readonly_access.py` |
-| 就绪报告 | `docs/stage5-readiness-report.md` |
+| 灌数 / 质量 / 只读检查 | Stage 3–5 脚本 |
 
 ## 快速启动
 
@@ -28,9 +28,12 @@ python3 -m pip install -r requirements.txt
 python3 scripts/seed_database.py
 python3 scripts/validate_data.py
 python3 scripts/verify_readonly_access.py
+# Stage 6（在仓库根目录）：
+# uv run python starsea-gaming/scripts/probe_ao_discovery.py
+# bash starsea-gaming/scripts/run_analytics_workload.sh
 ```
 
-接入 Auto-Ontology（不改主项目）：见 [`docs/auto-ontology-connection.md`](./docs/auto-ontology-connection.md)。
+接入与验证：[`docs/auto-ontology-connection.md`](./docs/auto-ontology-connection.md)、[`docs/auto-ontology-validation.md`](./docs/auto-ontology-validation.md)。
 
 默认端口 **5433**，库名 **`starsea_gaming`**。数据时间窗口锚定 `2025-11-22`～`2026-11-22` UTC（生成器固定 `NOW`）。
 

@@ -134,10 +134,32 @@ def main() -> int:
         )
         privs = dict(cur.fetchall())
         print(f"OK privileges={privs}")
-        if set(privs) - {"SELECT"}:
+        # SELECT for reads; REFERENCES so information_schema exposes PKs to AO connector
+        allowed = {"SELECT", "REFERENCES"}
+        if set(privs) - allowed:
             errors.append(f"unexpected privileges: {privs}")
         if privs.get("SELECT", 0) < 45:
             errors.append(f"SELECT grants={privs.get('SELECT')}")
+        if privs.get("REFERENCES", 0) < 45:
+            errors.append(
+                f"REFERENCES grants={privs.get('REFERENCES')} "
+                "(needed for PK discovery via information_schema)"
+            )
+
+        # PK visibility for Auto-Ontology postgres connector
+        cur.execute(
+            """
+            SELECT count(*)
+            FROM information_schema.table_constraints
+            WHERE constraint_type = 'PRIMARY KEY'
+              AND table_schema = ANY(%s)
+            """,
+            (list(SCHEMAS),),
+        )
+        pk_n = cur.fetchone()[0]
+        print(f"OK information_schema primary_keys={pk_n}")
+        if pk_n < 40:
+            errors.append(f"PK constraints visible via information_schema={pk_n}")
 
     conn.close()
 

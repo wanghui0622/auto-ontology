@@ -1,0 +1,128 @@
+{
+  "database_name": "starsea_gaming",
+  "dialect": "postgres",
+  "business_table_count": 45,
+  "tables_by_schema": {
+    "game": 11,
+    "identity": 6,
+    "mall": 7,
+    "marketing": 7,
+    "payment": 7,
+    "support": 7
+  },
+  "business_column_count": 406,
+  "pk_rows": 48,
+  "fk_rows": 84,
+  "cross_schema_fk_rows": 32,
+  "core_entities_present": {
+    "identity.players": true,
+    "game.games": true,
+    "game.characters": true,
+    "mall.mall_orders": true,
+    "payment.recharge_orders": true,
+    "payment.wallets": true,
+    "payment.wallet_ledgers": true,
+    "support.tickets": true,
+    "marketing.campaigns": true,
+    "marketing.player_attributions": true,
+    "mall.mall_refunds": true,
+    "payment.payment_refunds": true
+  },
+  "bridges_present": {
+    "identity.player_tag_relations": true,
+    "game.battle_participants": true,
+    "mall.product_items": true,
+    "marketing.campaign_channels": true,
+    "support.ticket_assignments": true
+  },
+  "fks_to_players": [
+    {
+      "table_schema": "game",
+      "table_name": "characters",
+      "column_name": "player_id"
+    },
+    {
+      "table_schema": "game",
+      "table_name": "game_events",
+      "column_name": "player_id"
+    },
+    {
+      "table_schema": "game",
+      "table_name": "player_sessions",
+      "column_name": "player_id"
+    },
+    {
+      "table_schema": "identity",
+      "table_name": "player_accounts",
+      "column_name": "player_id"
+    },
+    {
+      "table_schema": "identity",
+      "table_name": "player_devices",
+      "column_name": "player_id"
+    },
+    {
+      "table_schema": "identity",
+      "table_name": "player_tag_relations",
+      "column_name": "player_id"
+    },
+    {
+      "table_schema": "mall",
+      "table_name": "item_delivery_records",
+      "column_name": "player_id"
+    },
+    {
+      "table_schema": "mall",
+      "table_name": "mall_orders",
+      "column_name": "player_id"
+    },
+    {
+      "table_schema": "marketing",
+      "table_name": "campaign_participations",
+      "column_name": "player_id"
+    },
+    {
+      "table_schema": "marketing",
+      "table_name": "campaign_rewards",
+      "column_name": "player_id"
+    },
+    {
+      "table_schema": "marketing",
+      "table_name": "player_attributions",
+      "column_name": "player_id"
+    },
+    {
+      "table_schema": "payment",
+      "table_name": "recharge_orders",
+      "column_name": "player_id"
+    },
+    {
+      "table_schema": "payment",
+      "table_name": "wallets",
+      "column_name": "player_id"
+    },
+    {
+      "table_schema": "support",
+      "table_name": "customer_satisfaction",
+      "column_name": "player_id"
+    },
+    {
+      "table_schema": "support",
+      "table_name": "ticket_messages",
+      "column_name": "sender_player_id"
+    },
+    {
+      "table_schema": "support",
+      "table_name": "tickets",
+      "column_name": "player_id"
+    }
+  ],
+  "checks": {
+    "player_hub_cross_domain": true,
+    "all_core_entities": true,
+    "bridges_found": true,
+    "money_columns_distinct": true,
+    "pk_discovered": true,
+    "fk_discovered": true
+  }
+}

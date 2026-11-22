@@ -28,7 +28,7 @@ python3 scripts/verify_readonly_access.py # Stage 5 就绪检查
 | database | `starsea_gaming` |
 | user | `starsea_readonly` |
 | password | `starsea_readonly_password`（见 `.env`） |
-| schemas（建议显式勾选） | `identity`, `game`, `mall`, `payment`, `support`, `marketing` |
+| schemas | Postgres UI 连接器通常**无 schema 选择器**（`get_schemas` 未实现，Test 可能返回 `[]`）；ingest 会扫描非系统 schema。示例 JSON 中的 `schemas` 字段可选，便于文档对齐六大业务域。 |
 
 只读 URL：
 
@@ -50,12 +50,10 @@ postgresql://starsea_readonly:starsea_readonly_password@127.0.0.1:5433/starsea_g
 1. 使用管理员账号登录 Auto-Ontology（需 `connection:manage`）。
 2. 打开 **Settings → Connections**。
 3. 新增 PostgreSQL 连接，填写上表参数。
-4. 先 **Test connection**，确认返回的 schema 列表包含六个业务 Schema。
-5. 在 schema 选择器中勾选：`identity` / `game` / `mall` / `payment` / `support` / `marketing`  
-   （也可留空表示全部；显式勾选可避免扫到无关 schema）。
-6. 保存连接。
-7. 触发 **Ingest / 编译**（按你环境的 UI 或 ingestion service）。
-8. 在 Datasources 中确认 45 张表与外键被抽取。
+4. 先 **Test connection**。Postgres 驱动未实现 `get_schemas` 时返回 `schemas: []` 仍属正常，可继续保存。
+5. 保存连接。
+6. 触发 **Ingest / 编译**（按你环境的 UI 或 ingestion service）。
+7. 在 Datasources 中确认约 45 张业务表与外键被抽取。
 
 ### API 等价流程（可选）
 
@@ -104,12 +102,13 @@ python3 scripts/verify_readonly_access.py
 
 ## 6. 只读权限与自动发现预期
 
-已验证（见 `docs/stage5-readiness-report.md`）：
+已验证（见 `docs/stage5-readiness-report.md`、`docs/auto-ontology-validation.md`）：
 
-- 六 Schema、45 表 `SELECT`
+- 六 Schema、45 表 `SELECT` + `REFERENCES`
+- `REFERENCES` **不能**改数据，但让 `information_schema` 暴露 PRIMARY KEY，供连接器发现主键（FK 走 `pg_constraint`）
 - 表 COMMENT 可读
-- 跨 Schema 外键可通过 `pg_constraint` 读取（Auto-Ontology Postgres 连接器**不用**会隐藏约束的 `information_schema.table_constraints`）
-- `INSERT`/`UPDATE`/`DELETE` 被拒绝
+- 跨 Schema 外键可通过 `pg_constraint` 读取
+- `INSERT`/`UPDATE`/`DELETE` 被拒绝（SQLSTATE `42501`）
 
 自动本体化应能看到的结构信号（人工不预置）：
 
@@ -117,6 +116,8 @@ python3 scripts/verify_readonly_access.py
 - 商城 / 充值 / 钱包金额字段 COMMENT 区分
 - 归因表 `attribution_type`（first_touch / last_touch / campaign_conversion）
 - 桥接表：标签、战斗参与、商品道具、活动渠道
+
+本地连接器探测：`python3 scripts/probe_ao_discovery.py`（见 Stage 6 验证文档）。
 
 ## 7. 明确不要做的事
 
@@ -136,10 +137,11 @@ python3 scripts/verify_readonly_access.py
 
 或：`docker compose down -v && docker compose up -d` 后重新灌数。
 
-## 9. Stage 5 完成标准
+## 9. Stage 5–6 完成标准
 
 - [x] 独立 Postgres 可启动  
-- [x] 只读用户可读六个业务 Schema  
+- [x] 只读用户可读六个业务 Schema（含 PK 可见所需的 `REFERENCES`）  
 - [x] 提供连接配置示例与操作说明  
+- [x] 连接器探测 + 分析 SQL 金标准（Stage 6）  
 - [x] 不修改 Auto-Ontology 项目  
-- [ ] 在你的 Auto-Ontology 实例中实际 Test + Save + Ingest（需本地已部署 UI/服务；本阶段交付连接就绪，不代改对方配置）
+- [ ] 在你的 Auto-Ontology 实例中实际 Test + Save + Ingest + NLQ（需本地已部署 UI/服务；本仓库不代写 catalog）
