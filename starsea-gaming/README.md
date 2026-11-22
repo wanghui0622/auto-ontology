@@ -6,18 +6,16 @@
 
 ## 当前阶段
 
-**Stage 2：数据库设计（进行中 / 已落地 DDL）**
+**Stage 3：模拟数据已可一键灌库**
 
 | 产物 | 路径 |
 |---|---|
-| Compose | `docker-compose.yml` |
-| DDL | `sql/01_create_schemas.sql` … `03_constraints_indexes.sql` |
-| 只读授权 | `sql/04_grants_readonly.sql` + Compose 初始化脚本 |
+| Compose / DDL | `docker-compose.yml`, `sql/01`–`04` |
+| 数据生成 | `scripts/generate_data.py`（种子 `42`） |
+| 灌库 | `scripts/seed_database.py` |
+| 校验 | `scripts/validate_data.py` |
+| 质量报告 | `docs/data-quality-report.md` |
 | 接入说明 | `docs/auto-ontology-connection.md` |
-| 数据字典 | `docs/data-dictionary.md` |
-| Stage 1 模型 | `docs/domain-model.md` 等 |
-
-Stage 3（模拟数据生成）尚未开始。
 
 ## 快速启动
 
@@ -25,18 +23,19 @@ Stage 3（模拟数据生成）尚未开始。
 cd starsea-gaming
 cp -n .env.example .env
 docker compose up -d
-# 等待 healthy 后：
-docker compose exec starsea-postgres \
-  psql -U starsea -d starsea_gaming -c "\dn"
+# 等待 healthy 后初始化结构（首次 compose 已自动执行 DDL）：
+python3 -m pip install -r requirements.txt
+python3 scripts/seed_database.py
+python3 scripts/validate_data.py
 ```
 
-默认端口 **5433**，库名 **`starsea_gaming`**。
+默认端口 **5433**，库名 **`starsea_gaming`**。数据时间窗口锚定 `2025-11-22`～`2026-11-22` UTC（生成器固定 `NOW`）。
 
-已有空库时也可：
+结构重置：
 
 ```bash
-./scripts/init_database.sh
-./scripts/reset_database.sh   # 危险：DROP SCHEMA CASCADE 后重建
+./scripts/reset_database.sh   # DROP SCHEMA CASCADE 后重建空表
+python3 scripts/seed_database.py
 ```
 
 ## 目标数据库
