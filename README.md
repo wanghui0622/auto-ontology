@@ -38,6 +38,20 @@ Microsoft's sample sales database. You need Docker with Compose v2,
 [uv](https://docs.astral.sh/uv/), and an NVIDIA API key (`nvapi-...`) from
 [build.nvidia.com](https://build.nvidia.com).
 
+The Compose stack's only database is PostgreSQL 17 with pgvector
+(`pgvector/pgvector:pg17`). The app database name is `auto_ontology`.
+To build and start that stack in one command:
+
+```bash
+bash dev_tools/compose_up.sh
+```
+
+The script creates `.env` from `.env.example` when `.env` is missing, leaves
+the placeholder source database unset, and runs `docker compose up -d --build`.
+Open <http://localhost:3000> and sign in with the admin email and password in
+`.env`. Chat still needs `DEFAULT_MODELS_API_KEY` and a source connection.
+The steps below load the Wide World Importers sample into that same Postgres.
+
 1. Clone the repository and create `.env`:
 
    ```bash
