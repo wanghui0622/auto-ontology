@@ -1,0 +1,18 @@
+{
+  "connection": {
+    "type": "postgresql",
+    "host": "127.0.0.1",
+    "port": "5433",
+    "user": "starsea_readonly",
+    "password": "starsea_readonly_password",
+    "database": "starsea_gaming",
+    "schemas": [
+      "identity",
+      "game",
+      "mall",
+      "payment",
+      "support",
+      "marketing"
+    ]
+  }
+}

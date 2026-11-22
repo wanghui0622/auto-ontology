@@ -6,18 +6,16 @@
 
 ## 当前阶段
 
-**Stage 4：数据质量验证已通过**
+**Stage 5：Auto-Ontology 只读接入就绪**
 
 | 产物 | 路径 |
 |---|---|
-| Compose / DDL | `docker-compose.yml`, `sql/01`–`04` |
-| 数据生成 / 灌库 | `scripts/generate_data.py`, `scripts/seed_database.py` |
-| 质量校验 | `scripts/validate_data.py`（规模/FK/钱包/充值/商城/归因/指标） |
-| 质量报告 | `docs/data-quality-report.md` |
-| 指标口径 | `docs/metric-definitions.md` |
-| SQL 探针 | `sql/quality-checks.sql` |
-| 测试 | `tests/test_*.py` |
+| Compose / DDL / 灌数 / 质量校验 | 见 Stage 2–4 |
 | 接入说明 | `docs/auto-ontology-connection.md` |
+| 连接示例 | `config/auto-ontology-connection.example.json` |
+| CONNECTION_STRINGS 示例 | `config/connection-strings.example.env` |
+| 只读就绪检查 | `scripts/verify_readonly_access.py` |
+| 就绪报告 | `docs/stage5-readiness-report.md` |
 
 ## 快速启动
 
@@ -29,7 +27,10 @@ docker compose up -d
 python3 -m pip install -r requirements.txt
 python3 scripts/seed_database.py
 python3 scripts/validate_data.py
+python3 scripts/verify_readonly_access.py
 ```
+
+接入 Auto-Ontology（不改主项目）：见 [`docs/auto-ontology-connection.md`](./docs/auto-ontology-connection.md)。
 
 默认端口 **5433**，库名 **`starsea_gaming`**。数据时间窗口锚定 `2025-11-22`～`2026-11-22` UTC（生成器固定 `NOW`）。
 
